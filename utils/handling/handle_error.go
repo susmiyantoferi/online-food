@@ -25,7 +25,7 @@ var errorMapping = map[error]struct {
 	Data    interface{}
 }{
 	ErrorEmailExist:    {http.StatusConflict, "Conflict", "email already exists", nil},
-	ErrorValidation:    {http.StatusBadRequest, "Bad Request", "validation error", nil},
+	ErrorValidation:    {http.StatusBadRequest, "Bad Request", "invalid input", nil},
 	ErrNotEnoughStock:  {http.StatusBadRequest, "Bad Request", "not enough stock", nil},
 	ErrFailedLogin:     {http.StatusBadRequest, "Bad Request", "email or password wrong", nil},
 	ErrInvalidToken:    {http.StatusBadRequest, "Bad Request", "invalid token refresh", nil},

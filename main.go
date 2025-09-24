@@ -22,11 +22,16 @@ func main() {
 	database := config.Database()
 	//redis:= config.RedisCLient()
 	validate := validator.New()
+
 	userRepo := repository.NewUserRepositoryImpl(database)
 	userService := service.NewUserServiceImpl(userRepo, validate)
 	userHandler := handler.NewUserHandlerImpl(userService)
 
-	routes := routes.SetupRouter(userHandler)
+	menuRepo := repository.NewMenuRepositoryImpl(database)
+	menuService := service.NewMenuServiceImpl(menuRepo, validate)
+	menuHandler := handler.NewMenuHandlerImpl(menuService)
+
+	routes := routes.SetupRouter(userHandler, menuHandler)
 
 	port := os.Getenv("APP_PORT")
 	routes.Run(port)
