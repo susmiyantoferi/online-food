@@ -18,6 +18,8 @@ type UserHandler interface {
 	FindByID(ctx *gin.Context)
 	FindAll(ctx *gin.Context)
 	FindByEmail(ctx *gin.Context)
+	Login(ctx *gin.Context)
+	RefreshToken(ctx *gin.Context)
 }
 
 type userHandlerImpl struct {
@@ -125,3 +127,37 @@ func (u *userHandlerImpl) FindByEmail(ctx *gin.Context) {
 
 	response.ToResponseJson(ctx, http.StatusOK, "Success", "find email successfully", result)
 }
+
+func (u *userHandlerImpl) Login(ctx *gin.Context) {
+	req := dto.UserLoginReq{}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil{
+		handling.HandleError(ctx, err)
+		return
+	}
+
+	result, err := u.UserService.Login(ctx.Request.Context(), &req)
+	if err != nil {
+		handling.HandleError(ctx, err)
+		return
+	}
+
+	response.ToResponseJson(ctx, http.StatusOK, "Success", "generate token successfully", result)
+}
+
+func (u *userHandlerImpl) RefreshToken(ctx *gin.Context) {
+	req := dto.UserRefreshTokenReq{}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil{
+		handling.HandleError(ctx, err)
+		return
+	}
+
+	result, err := u.UserService.RefreshToken(ctx.Request.Context(), &req)
+	if err != nil {
+		handling.HandleError(ctx, err)
+		return
+	}
+
+	response.ToResponseJson(ctx, http.StatusOK, "Success", "generate new token successfully", result)
+}	

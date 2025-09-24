@@ -29,6 +29,15 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UserLoginReq struct {
+	Email    string `validate:"required,email,min=1,max=100" json:"email"`
+	Password string `validate:"required,min=8,max=100" json:"password"`
+}
+
+type UserRefreshTokenReq struct {
+	TokenRefresh string `validate:"required" json:"refresh_token"`
+}
+
 func ToUserResponse(user *entity.User) *UserResponse {
 	return &UserResponse{
 		Name:      user.Name,

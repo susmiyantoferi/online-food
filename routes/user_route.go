@@ -10,6 +10,8 @@ func UserRouter(router *gin.Engine, UserHandler handler.UserHandler){
 
 	regist := router.Group("/api/v1/users")
 	{
+		regist.POST("/login", UserHandler.Login)
+		regist.POST("/refresh-token", UserHandler.RefreshToken)
 		regist.POST("/register", UserHandler.Create)
 		regist.PUT("/:userId", UserHandler.Update)
 		regist.DELETE("/:userId", UserHandler.Delete)

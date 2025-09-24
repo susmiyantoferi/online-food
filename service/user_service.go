@@ -10,7 +10,12 @@ import (
 	"online-food/utils/constanta"
 	"online-food/utils/handling"
 	"online-food/utils/hashing"
+	"online-food/utils/token"
+
+	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -22,6 +27,8 @@ type UserService interface {
 	FindByID(ctx context.Context, id uint) (*dto.UserResponse, error)
 	FindAll(ctx context.Context) ([]*dto.UserResponse, error)
 	FindByEmail(ctx context.Context, email string) (*dto.UserResponse, error)
+	Login(ctx context.Context, req *dto.UserLoginReq) (*dto.TokenResponse, error)
+	RefreshToken(ctx context.Context, req *dto.UserRefreshTokenReq) (*dto.TokenResponse, error)
 }
 
 type userServiceImpl struct {
@@ -163,4 +170,80 @@ func (u *userServiceImpl) FindByEmail(ctx context.Context, email string) (*dto.U
 	response := dto.ToUserResponse(user)
 
 	return response, nil
+}
+
+func (u *userServiceImpl) Login(ctx context.Context, req *dto.UserLoginReq) (*dto.TokenResponse, error) {
+	if err := u.Validate.Struct(req); err != nil {
+		return nil, handling.ErrorValidation
+	}
+
+	user, err := u.UserRepo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		if errors.Is(err, handling.ErrorEmailNotFound) {
+			return nil, handling.ErrorEmailNotFound
+		}
+		return nil, fmt.Errorf("user service: login: find by email: %w", err)
+	}
+
+	if !hashing.CompareHashPassword(user.Password, req.Password) {
+		return nil, handling.ErrFailedLogin
+	}
+
+	tokenExp, _ := strconv.Atoi(os.Getenv("JWT_EXP"))
+
+	accessToken, err := token.GenerateToken(user.ID, user.Name, user.Email, user.Role, time.Duration(tokenExp))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	refreshToken, err := token.GenerateToken(user.ID, user.Name, user.Email, user.Role, time.Duration(tokenExp*2))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+	}
+
+	createdToken := &dto.TokenResponse{
+		Username:     user.Name,
+		Token:        accessToken,
+		TokenRefresh: refreshToken,
+		TokenType:    "Bearer",
+		ExipresIn:    tokenExp * 3600,
+	}
+
+	return createdToken, nil
+
+}
+
+func (u *userServiceImpl) RefreshToken(ctx context.Context, req *dto.UserRefreshTokenReq) (*dto.TokenResponse, error) {
+	if err := u.Validate.Struct(req); err != nil {
+		return nil, handling.ErrorValidation
+	}
+
+	tokenClaims, err := token.ClaimTokenRefresh(req.TokenRefresh)
+	if err != nil {
+		return nil, handling.ErrInvalidToken
+	}
+
+	user, err := u.UserRepo.FindByID(ctx, tokenClaims.UserID)
+	if err != nil {
+		if errors.Is(err, handling.ErrorIdNotFound) {
+			return nil, handling.ErrorIdNotFound
+		}
+		return nil, fmt.Errorf("user service: refresh token, find user: %w", err)
+	}
+
+	tokenExp, _ := strconv.Atoi(os.Getenv("JWT_EXP"))
+
+	accessToken, err := token.GenerateToken(user.ID, user.Name, user.Email, user.Role, time.Duration(tokenExp)) //expired in 24 hour
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	createdToken := &dto.TokenResponse{
+		Username:  tokenClaims.Username,
+		Token:     accessToken,
+		TokenType: "Bearer",
+		ExipresIn: tokenExp * 3600,
+	}
+
+	return createdToken, nil
 }

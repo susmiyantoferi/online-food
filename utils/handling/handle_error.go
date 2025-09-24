@@ -14,6 +14,8 @@ var (
 	ErrorEmailExist    = errors.New("email already exist")
 	ErrNotEnoughStock  = errors.New("not enough stock")
 	ErrorValidation    = errors.New("validation failed")
+	ErrFailedLogin     = errors.New("email or password wrong")
+	ErrInvalidToken    = errors.New("invalid token refresh")
 )
 
 var errorMapping = map[error]struct {
@@ -25,6 +27,8 @@ var errorMapping = map[error]struct {
 	ErrorEmailExist:    {http.StatusConflict, "Conflict", "email already exists", nil},
 	ErrorValidation:    {http.StatusBadRequest, "Bad Request", "validation error", nil},
 	ErrNotEnoughStock:  {http.StatusBadRequest, "Bad Request", "not enough stock", nil},
+	ErrFailedLogin:     {http.StatusBadRequest, "Bad Request", "email or password wrong", nil},
+	ErrInvalidToken:    {http.StatusBadRequest, "Bad Request", "invalid token refresh", nil},
 	ErrorEmailNotFound: {http.StatusNotFound, "Not Found", "email not found", nil},
 	ErrorIdNotFound:    {http.StatusNotFound, "Not Found", "id not found", nil},
 }
