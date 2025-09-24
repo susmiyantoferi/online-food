@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"online-food/entity"
 	"os"
 
 	"gorm.io/driver/mysql"
@@ -24,7 +25,13 @@ func Database() *gorm.DB {
 		log.Fatalf("database: %v", err)
 	}
 
-	err = db.AutoMigrate()
+	err = db.AutoMigrate(
+		&entity.User{},
+		&entity.Menu{},
+		&entity.Cart{},
+		&entity.CartMenu{},
+		&entity.Order{},
+	)
 	if err != nil {
 		log.Fatal("AutoMigrate failed:", err)
 	}
