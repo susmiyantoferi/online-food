@@ -15,6 +15,7 @@ type UserHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	Profile(ctx *gin.Context)
 	FindByID(ctx *gin.Context)
 	FindAll(ctx *gin.Context)
 	FindByEmail(ctx *gin.Context)
@@ -57,14 +58,17 @@ func (u *userHandlerImpl) Update(ctx *gin.Context) {
 		return
 	}
 
-	userId := ctx.Param("userId")
-	id, err := strconv.Atoi(userId)
-	if err != nil {
-		response.ToResponseJson(ctx, http.StatusBadRequest, "Bad Request", "invalid input type id", nil)
-		return
-	}
+	// userId := ctx.Param("userId")
+	// id, err := strconv.Atoi(userId)
+	// if err != nil {
+	// 	response.ToResponseJson(ctx, http.StatusBadRequest, "Bad Request", "invalid input type id", nil)
+	// 	return
+	// }
 
-	result, err := u.UserService.Update(ctx.Request.Context(), uint(id), &req)
+	userCllaims, _ := ctx.Get("user")
+	user := userCllaims.(*dto.TokenClaim)
+
+	result, err := u.UserService.Update(ctx.Request.Context(), user.UserID, &req)
 	if err != nil {
 		handling.HandleError(ctx, err)
 		return
@@ -89,7 +93,22 @@ func (u *userHandlerImpl) Delete(ctx *gin.Context) {
 	response.ToResponseJson(ctx, http.StatusOK, "Deleted", "user deleted successfully", nil)
 }
 
+func (u *userHandlerImpl) Profile(ctx *gin.Context) {
+
+	userCllaims, _ := ctx.Get("user")
+	user := userCllaims.(*dto.TokenClaim)
+
+	result, err := u.UserService.FindByID(ctx.Request.Context(), user.UserID)
+	if err != nil {
+		handling.HandleError(ctx, err)
+		return
+	}
+
+	response.ToResponseJson(ctx, http.StatusOK, "Success", "find id successfully", result)
+}
+
 func (u *userHandlerImpl) FindByID(ctx *gin.Context) {
+
 	userId := ctx.Param("userId")
 	id, err := strconv.Atoi(userId)
 	if err != nil {
