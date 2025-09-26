@@ -8,6 +8,8 @@ import (
 
 type Order struct {
 	ID        uint           `gorm:"primaryKey;autoIncrement"`
+	UserID    uint           `grom:"notnull"`
+	User      User           `gorm:"foreignKey:UserID;references:ID;onDelete:RESTRICT"`
 	CartID    uint           `gorm:"notnull"`
 	Cart      Cart           `gorm:"foreignKey:CartID;references:ID;onDelete:RESTRICT"`
 	AmountPay float64        `gorm:"notnull"`
