@@ -76,7 +76,7 @@ func (c *cartServiceImpl) UpdateCart(ctx context.Context, req *dto.CartUpdateReq
 		return nil, handling.ErrorValidation
 	}
 
-	result, err := c.CartRepo.UpdateCart(ctx, req.CardID, req.MenuID, req.Qty)
+	result, err := c.CartRepo.UpdateCart(ctx, req.CardID, req.MenuID, req.UserID, req.Qty)
 	if err != nil {
 		if errors.Is(err, handling.ErrMenuNotFound) {
 			return nil, handling.ErrMenuNotFound

@@ -15,7 +15,7 @@ import (
 
 type CartRepository interface {
 	CreateCart(ctx context.Context, cart *entity.Cart) (*entity.Cart, error)
-	UpdateCart(ctx context.Context, cartID, menuID uint, qty int) (*entity.Cart, error)
+	UpdateCart(ctx context.Context, cartID, menuID, userID uint, qty int) (*entity.Cart, error)
 	//DeleteCart(ctx context.Context, cartID uint) error
 	GetCartByUserID(ctx context.Context, userID uint) ([]*entity.Cart, error)
 	GetCartByID(ctx context.Context, cartID uint) (*entity.Cart, error)
@@ -105,13 +105,13 @@ func (c *cartRepositoryImpl) CreateCart(ctx context.Context, cart *entity.Cart) 
 	return cart, nil
 }
 
-func (c *cartRepositoryImpl) UpdateCart(ctx context.Context, cartID, menuID uint, qty int) (*entity.Cart, error) {
+func (c *cartRepositoryImpl) UpdateCart(ctx context.Context, cartID, menuID, userID uint, qty int) (*entity.Cart, error) {
 	var result *entity.Cart
 
 	err := c.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		var cart entity.Cart
-		if err := tx.First(&cart, cartID).Error; err != nil {
+		if err := tx.Where("user_id", userID).First(&cart, cartID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return handling.ErrorIdNotFound
 			}
@@ -196,7 +196,7 @@ func (c *cartRepositoryImpl) UpdateCart(ctx context.Context, cartID, menuID uint
 
 				newQty := cartMenu.Qty - remove
 				if newQty == 0 {
-					if err := tx.Delete(&entity.Menu{}, cartMenu.ID).Error; err != nil {
+					if err := tx.Delete(&entity.CartMenu{}, cartMenu.ID).Error; err != nil {
 						return fmt.Errorf("delete cart menu: %w", err)
 					}
 				} else {

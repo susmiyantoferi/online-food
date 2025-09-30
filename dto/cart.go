@@ -16,6 +16,7 @@ type CartCreateReq struct {
 }
 
 type CartUpdateReq struct {
+	UserID uint `validate:"required" json:"user_id"`
 	CardID uint `validate:"required" json:"card_id"`
 	MenuID uint `validate:"required" json:"menu_id"`
 	Qty    int  `validate:"required" json:"qty"`

@@ -66,7 +66,11 @@ func (c *cartHandlerImpl) UpdateCart(ctx *gin.Context) {
 		return
 	}
 
+	userClaims, _ := ctx.Get("user")
+	user := userClaims.(*dto.TokenClaim)
+
 	req.CardID = uint(id)
+	req.UserID = user.UserID
 
 	result, err := c.CartService.UpdateCart(ctx.Request.Context(), &req)
 	if err != nil {
